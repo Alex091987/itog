@@ -1,0 +1,49 @@
+---
+- name: Сервер Kibana
+  hosts: kibana
+  gather_facts: true
+  become: true
+  become_method: sudo
+
+  tasks:
+
+  - name: Install a .deb package from the internet
+    apt:
+      deb: https://repo.zabbix.com/zabbix/6.4/debian/pool/main/z/zabbix-release/zabbix-release_6.4-1+debian11_all.deb
+      
+  - name: Install a list of packages
+    apt:
+      update_cache: yes
+      pkg:
+      - docker
+      - docker-compose
+      - zabbix-agent2
+      - zabbix-agent2-plugin-*
+
+  - name: Add kvm module
+    community.general.modprobe:
+     name: kvm
+     state: present
+
+  - name: копирование nginx-compose.yaml
+    copy:
+     src: config/kibana-compose.yaml
+     dest: /home/user/docker-compose.yaml
+     remote_src: false
+
+  - name: Create and start services
+    community.docker.docker_compose:
+     project_src: /home/user
+     state: present
+
+  - name: Правим /etc/zabbix/zabbix-agent2.conf
+    replace:
+     path:  /etc/zabbix/zabbix_agent2.conf
+     regexp: 'Server=127.0.0.1'
+     replace: 'Server=vm-5'
+
+  - name: Restart service zabbix-agent2
+    service:
+      name: zabbix-agent2
+      state: restarted
+      enabled: yes

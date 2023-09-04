@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  
+  filebeat:
+    image: elastic/filebeat:7.17.12
+    command: --strict.perms=false
+    user: root
+    ports:
+     - 5066:5066
+    volumes:
+      - /home/user/config/pipeline/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log:/var/log:rw
+      
